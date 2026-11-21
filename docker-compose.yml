@@ -1,0 +1,29 @@
+services:
+  app:
+    build: ./Servidor/app
+    networks: [rede_Servidores]
+
+  web:
+    image: nginx:1.31.9-alpine
+    volumes:
+      - ./Servidor/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8080:80"
+    networks: [rede_Servidores]
+    depends_on: [app]
+
+  cliente:
+    image: curlimages/curl
+    entrypoint: ["sleep", "infinity"]
+    networks: [rede_Servidores]
+
+  monitor:
+    image: nicolaka/netshoot
+    network_mode: "service:web"
+    cap_add: [NET_ADMIN, NET_RAW]
+    volumes:
+      - ./Capturas/Modulo1:/capturas
+    command: tcpdump -i eth0 -w /capturas/http_inseguro.pcap port 80
+
+networks:
+  rede_Servidores:
